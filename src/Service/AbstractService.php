@@ -2,7 +2,7 @@
 
 namespace SixBySix\RealtimeDespatch\Service;
 
-use \SixBySix\RealtimeDespatch\Gateway\DefaultGateway;
+use \SixBySix\RealtimeDespatch\Gateway\Guzzle\DefaultGateway;
 
 use \SixBySix\RealtimeDespatch\Document\DocFactory;
 use \SixBySix\RealtimeDespatch\Report\ImportReportFactory;

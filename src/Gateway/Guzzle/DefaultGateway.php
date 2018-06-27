@@ -2,7 +2,7 @@
 
 namespace SixBySix\RealtimeDespatch\Gateway\Guzzle;
 
-use Buzz\Browser as HttpClient;
+use GuzzleHttp\Client as HttpClient;
 
 
 /**
@@ -67,7 +67,7 @@ class DefaultGateway
 
     public function _setResponse( $response )
     {
-        $this->_lastResponse = new \SimpleXMLElement( $response->getBody() );
+        $this->_lastResponse = new \SimpleXMLElement( $response->getBody()->getContents() );
     }
 
     /**
@@ -263,8 +263,12 @@ class DefaultGateway
     {
         $response = $this->_client->post(
             $this->_createUrl( self::API_ENDPOINT_ORDER_IMPORT ),
-            [ 'Content-Type' => 'application/xml' ],
-            $body
+            [
+                'headers' => [
+                    'Content-Type' => 'application/xml',
+                ],
+                'body' => $body,
+            ]
         );
 
         $this->_setResponse( $response );
@@ -283,8 +287,12 @@ class DefaultGateway
     {
         $response = $this->_client->post(
             $this->_createUrl( self::API_ENDPOINT_RETURN_IMPORT ),
-            [ 'Content-Type' => 'application/xml' ],
-            $body
+            [
+                'headers' => [
+                    'Content-Type' => 'application/xml',
+                ],
+                'body' => $body,
+            ]
         );
 
         $this->_setResponse( $response );

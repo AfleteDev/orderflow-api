@@ -10,7 +10,8 @@
         }
     ],
     "require": {
-        "kriswallsmith/buzz": "*"
+        "kriswallsmith/buzz": "*",
+        "guzzlehttp/guzzle": "~6.0"
     },
     "config": {
         "bin-dir": "../bin/"

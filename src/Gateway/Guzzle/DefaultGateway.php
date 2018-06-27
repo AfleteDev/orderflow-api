@@ -1,16 +1,14 @@
 <?php
 
-namespace SixBySix\RealtimeDespatch\Gateway;
+namespace SixBySix\RealtimeDespatch\Gateway\Guzzle;
 
 use Buzz\Browser as HttpClient;
-use Buzz\Listener\ListenerInterface as BuzzListenerInterface;
-use Buzz\Message\MessageInterface;
-use Buzz\Message\RequestInterface;
+
 
 /**
  * Default Gateway.
  */
-class DefaultGateway implements BuzzListenerInterface
+class DefaultGateway
 {
     const API_ENDPOINT_INVENTORY_RETRIEVAL = 'remotewarehouse/inventory.xml';
     const API_ENDPOINT_PRODUCT_IMPORT = 'remotewarehouse/imports/importitems.xml';
@@ -61,50 +59,52 @@ class DefaultGateway implements BuzzListenerInterface
      *
      * @param \GuzzleHttp\Client $client
      */
-    public function __construct(HttpClient $client, $baseUrl, $options = array())
+    public function __construct( HttpClient $client, $options = array() )
     {
-        $this->_client  = $client;
-        $this->_baseUrl = $baseUrl;
+        $this->_client = $client;
         $this->_options = $options;
+    }
 
-        $this->_client->addListener($this);
+    public function _setResponse( $response )
+    {
+        $this->_lastResponse = new \SimpleXMLElement( $response->getBody() );
     }
 
     /**
      * {@inheritdoc}
      */
-    public function preSend(RequestInterface $request)
-    {
-        $this->_lastRequest = null;
-
-        try
-        {
-            $this->_lastRequest = new \SimpleXMLElement($request->getContent());
-        }
-        catch (\Exception $ex)
-        {
-            $this->_lastRequest = $request;
-            return;
-        }
-    }
+    //public function preSend(RequestInterface $request)
+    //{
+    //    $this->_lastRequest = null;
+//
+    //    try
+    //    {
+    //        $this->_lastRequest = new \SimpleXMLElement($request->getContent());
+    //    }
+    //    catch (\Exception $ex)
+    //    {
+    //        $this->_lastRequest = $request;
+    //        return;
+    //    }
+    //}
 
     /**
      * {@inheritdoc}
      */
-    public function postSend(RequestInterface $request, MessageInterface $response)
-    {
-        $this->_lastResponse = new \SimpleXMLElement($response->getContent());
-    }
+    //public function postSend(RequestInterface $request, MessageInterface $response)
+    //{
+    //    $this->_lastResponse = new \SimpleXMLElement($response->getContent());
+    //}
 
     /**
      * Returns the last request.
      *
      * @return \SimpleXMLElement
      */
-    public function getLastRequest()
-    {
-        return $this->_lastRequest;
-    }
+    //public function getLastRequest()
+    //{
+    //    return $this->_lastRequest;
+    //}
 
     /**
      * Returns the lastresponse.
@@ -123,9 +123,11 @@ class DefaultGateway implements BuzzListenerInterface
      */
     public function retrieveInventory()
     {
-        $this->_client->get(
+        $response = $this->_client->get(
             $this->_createUrl(self::API_ENDPOINT_INVENTORY_RETRIEVAL)
         );
+
+        $this->_setResponse( $response );
 
         return $this->getLastResponse();
     }
@@ -137,13 +139,19 @@ class DefaultGateway implements BuzzListenerInterface
      *
      * @return \SimpleXMLElement
      */
-    public function importProducts($body)
+    public function importProducts( $body )
     {
-        $this->_client->post(
+        $response = $this->_client->post(
             $this->_createUrl(self::API_ENDPOINT_PRODUCT_IMPORT),
-            array('Content-Type' => 'application/xml'),
-            $body
+            [
+                'headers' => [
+                    'Content-Type' => 'application/xml',
+                ],
+                'body' => $body,
+            ]
         );
+
+        $this->_setResponse( $response );
 
         return $this->getLastResponse();
     }
@@ -152,24 +160,26 @@ class DefaultGateway implements BuzzListenerInterface
      * Order Notification.
      *
      * @param string $incrementId Order Increment ID
-     * @param string $type        Notification Type
+     * @param string $type Notification Type
      *
      * @return \SimpleXMLElement
      */
-    public function orderNotification($incrementId, $type)
+    public function orderNotification( $incrementId, $type )
     {
-        $this->_client->post(
+        $response = $this->_client->post(
             $this->_createUrl(
                 self::API_ENDPOINT_ORDER_UPDATE,
-                array(
-                    'query' => array(
+                [
+                    'query' => [
                         'thirdPartyReference' => $incrementId,
-                        'event' => 'order.'.$type,
-                        'action' => $type
-                    )
-                )
+                        'event' => 'order.' . $type,
+                        'action' => $type,
+                    ],
+                ]
             )
         );
+
+        $this->_setResponse( $response );
 
         return $this->getLastResponse();
     }
@@ -177,25 +187,27 @@ class DefaultGateway implements BuzzListenerInterface
     /**
      * Product Notification.
      *
-     * @param string $sku  Product SKU
+     * @param string $sku Product SKU
      * @param string $type Notification Type
      *
      * @return \SimpleXMLElement
      */
-    public function productNotification($sku, $type)
+    public function productNotification( $sku, $type )
     {
-        $this->_client->post(
+        $response = $this->_client->post(
             $this->_createUrl(
                 self::API_ENDPOINT_PRODUCT_UPDATE,
-                array(
-                    'query' => array(
+                [
+                    'query' => [
                         'thirdPartyReference' => $sku,
-                        'event' => 'product.'.$type,
-                        'action' => $type
-                    )
-                )
+                        'event' => 'product.' . $type,
+                        'action' => $type,
+                    ],
+                ]
             )
         );
+
+        $this->_setResponse( $response );
 
         return $this->getLastResponse();
     }
@@ -207,14 +219,16 @@ class DefaultGateway implements BuzzListenerInterface
      *
      * @return \SimpleXMLElement
      */
-    public function cancelOrder($externalReference)
+    public function cancelOrder( $externalReference )
     {
-        $this->_client->post(
+        $response = $this->_client->post(
             $this->_createUrl(
                 self::API_ENDPOINT_ORDER_CANCEL,
-                array('query' => array('externalReference' => $externalReference))
+                [ 'query' => [ 'externalReference' => $externalReference ] ]
             )
         );
+
+        $this->_setResponse( $response );
 
         return $this->getLastResponse();
     }
@@ -224,14 +238,16 @@ class DefaultGateway implements BuzzListenerInterface
      *
      * @return \SimpleXMLElement
      */
-    public function retrieveOrderDetails($externalReference)
+    public function retrieveOrderDetails( $externalReference )
     {
-        $this->_client->post(
+        $response = $this->_client->post(
             $this->_createUrl(
                 self::API_ENDPOINT_ORDER_DETAIL,
-                array('query' => array('externalReference' => $externalReference))
+                [ 'query' => [ 'externalReference' => $externalReference ] ]
             )
         );
+
+        $this->_setResponse( $response );
 
         return $this->getLastResponse();
     }
@@ -243,13 +259,15 @@ class DefaultGateway implements BuzzListenerInterface
      *
      * @return \SimpleXMLElement
      */
-    public function importOrders($body)
+    public function importOrders( $body )
     {
-        $this->_client->post(
-            $this->_createUrl(self::API_ENDPOINT_ORDER_IMPORT),
-            array('Content-Type' => 'application/xml'),
+        $response = $this->_client->post(
+            $this->_createUrl( self::API_ENDPOINT_ORDER_IMPORT ),
+            [ 'Content-Type' => 'application/xml' ],
             $body
         );
+
+        $this->_setResponse( $response );
 
         return $this->getLastResponse();
     }
@@ -261,13 +279,15 @@ class DefaultGateway implements BuzzListenerInterface
      *
      * @return \SimpleXMLElement
      */
-    public function importReturns($body)
+    public function importReturns( $body )
     {
-        $this->_client->post(
-            $this->_createUrl(self::API_ENDPOINT_RETURN_IMPORT),
-            array('Content-Type' => 'application/xml'),
+        $response = $this->_client->post(
+            $this->_createUrl( self::API_ENDPOINT_RETURN_IMPORT ),
+            [ 'Content-Type' => 'application/xml' ],
             $body
         );
+
+        $this->_setResponse( $response );
 
         return $this->getLastResponse();
     }
@@ -276,14 +296,14 @@ class DefaultGateway implements BuzzListenerInterface
      * Creates a new endpoint url.
      *
      * @param string $resource
-     * @param array  $options
+     * @param array $options
      *
      * @return string
      */
-    protected function _createUrl($resource, $options = array())
+    protected function _createUrl( $resource, $options = [] )
     {
-        $options = array_merge_recursive($this->_options, $options);
+        $options = array_merge_recursive( $this->_options, $options );
 
-        return $this->_baseUrl.$resource.'?'.http_build_query($options['query']);
+        return $resource . '?' . http_build_query( $options[ 'query' ] );
     }
 }

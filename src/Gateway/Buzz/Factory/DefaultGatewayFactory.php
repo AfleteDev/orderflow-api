@@ -1,6 +1,6 @@
 <?php
 
-namespace SixBySix\RealtimeDespatch\Gateway\Factory;
+namespace SixBySix\RealtimeDespatch\Gateway\Buzz\Factory;
 
 use SixBySix\RealtimeDespatch\Api\Credentials;
 use SixBySix\RealtimeDespatch\Gateway\DefaultGateway;

@@ -80,7 +80,7 @@ class OrderService extends AbstractService
      *
      * @param \SixBySix\RealtimeDespatch\Entity\OrderCollection $orders
      *
-     * @return SixBySix\RealtimeDespatch\Report
+     * @return boolean
      */
     public function importOrders(OrderCollection $orders)
     {
@@ -88,6 +88,8 @@ class OrderService extends AbstractService
             array('orders' => $orders)
         )->saveXml();
 
-        return $this->_createImportReport($this->_gateway->importOrders($xml));
+        $this->_gateway->importOrders($xml);
+
+        return true;
     }
 }

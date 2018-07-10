@@ -240,7 +240,7 @@ class DefaultGateway
      */
     public function retrieveOrderDetails( $externalReference )
     {
-        $response = $this->_client->post(
+        $response = $this->_client->get(
             $this->_createUrl(
                 self::API_ENDPOINT_ORDER_DETAIL,
                 [ 'query' => [ 'externalReference' => $externalReference ] ]
